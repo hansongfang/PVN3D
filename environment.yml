@@ -1,0 +1,28 @@
+name: PVN3D
+channels:
+  - pytorch
+  - defaults
+  - conda-forge
+dependencies:         # everything under this, installed by conda
+- python=3.7
+- pip
+- pytorch=1.5.1
+- cudatoolkit=10.1
+- future
+- tensorboard
+- numpy
+- scipy
+- scikit-learn
+- scikit-image
+- h5py
+- cython
+- tqdm
+- natsort
+- tabulate
+- yacs
+- pytest
+- matplotlib
+- pip:
+    - open3d==0.10.0
+    - opencv-python
+    - loguru
