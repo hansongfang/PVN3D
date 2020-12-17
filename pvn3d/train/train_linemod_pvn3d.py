@@ -32,8 +32,8 @@ from collections import namedtuple
 import pickle as pkl
 
 
-rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-resource.setrlimit(resource.RLIMIT_NOFILE, (30000, rlimit[1]))
+# rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
+# resource.setrlimit(resource.RLIMIT_NOFILE, (30000, rlimit[1]))
 
 parser = argparse.ArgumentParser(description="Arg parser")
 parser.add_argument(
