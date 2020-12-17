@@ -9,6 +9,7 @@ import torch
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_sched
 import torch.nn as nn
+from loguru import logger
 import numpy as np
 from torch.utils.data import DataLoader
 import pprint
@@ -205,7 +206,6 @@ def model_fn_decorator(
             acc_rgbd = (
                 classes_rgbd == labels
             ).float().sum() / labels.numel()
-
             if is_test:
                 teval.eval_pose_parallel(
                     pcld, rgb, classes_rgbd, pred_ctr_of, ctr_targ_ofst,
@@ -352,6 +352,8 @@ class Trainer(object):
 
         it = start_it
         _, eval_frequency = is_to_eval(0, it)
+        logger.info(f'start_it: {start_it}')
+        logger.info(f'start_epoch: {start_epoch}, eval_frequency: {eval_frequency}')
 
         with tqdm.trange(start_epoch, n_epochs + 1, desc="epochs") as tbar, tqdm.tqdm(
             total=eval_frequency, leave=False, desc="train"
@@ -374,6 +376,18 @@ class Trainer(object):
 
                     self.optimizer.zero_grad()
                     _, loss, res = self.model_fn(self.model, batch)
+
+                    if it % 10 == 0:
+                        acc_rgbd = res['acc_rgbd']
+                        total_loss = res['loss']
+                        loss_rgbd_seg = res['loss_rgbd_seg']
+                        loss_kp_of = res['loss_kp_of']
+                        loss_ctr_of = res['loss_ctr_of']
+                        loss_target = res['loss_target']
+                        logger.info(
+                            f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}')
+                        # logger.info(f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}, '
+                        #             f'loss_kp_of: {float(loss_kp_of):.3f}, loss_ctr_of: {float(loss_ctr_of):3.f}')
 
                     loss.backward()
                     self.optimizer.step()
