@@ -38,7 +38,7 @@ class LM_Dataset():
         self.cls_root = os.path.join(self.root, "data/%02d/" % self.cls_id)
         self.rng = np.random
         meta_file = open(os.path.join(self.cls_root, 'gt.yml'), "r")
-        self.meta_lst = yaml.load(meta_file)
+        self.meta_lst = yaml.load(meta_file, Loader=yaml.FullLoader)
         if dataset_name == 'train':
             self.add_noise = True
             real_img_pth = os.path.join(
