@@ -5,12 +5,11 @@ from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 
-_ext_src_root = "./pvn3d/_ext-src"
+_ext_src_root = f"{os.path.abspath(os.path.dirname(__file__))}/pvn3d/_ext-src"
 _ext_sources = glob.glob("{}/src/*.cpp".format(_ext_src_root)) + glob.glob(
     "{}/src/*.cu".format(_ext_src_root)
 )
 _ext_headers = glob.glob("{}/include/*".format(_ext_src_root))
-
 
 setup(
     name='pvn3d',
@@ -31,10 +30,9 @@ setup(
     }
 )
 
-
 try:
     src_pth = './build'
-    tg_pth = 'pvn3d/lib/pointnet2_utils/'
+    tg_pth = f'{os.path.abspath(os.path.dirname(__file__))}/pvn3d/lib/pointnet2_utils/'
     fd_lst = os.listdir(src_pth)
     for fd in fd_lst:
         if 'lib' in fd:
@@ -42,10 +40,10 @@ try:
             f_nm = os.listdir(src_pth)[0]
             src_pth = os.path.join(src_pth, f_nm)
             tg_pth = os.path.join(tg_pth, f_nm)
-    os.system('cp {} {}'.format(src_pth, tg_pth))
     print(
         src_pth, '==>', tg_pth,
     )
+    os.system('cp {} {}'.format(src_pth, tg_pth))
 except:
     print(
         "\n****************************************************************\n",
