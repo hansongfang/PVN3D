@@ -399,16 +399,13 @@ class Basic_Utils():
         return cld, choose
 
     def get_normal(self, cld):
-        import pcl
-        cloud = pcl.PointCloud()
+        import open3d as o3d
+        cloud = o3d.geometry.PointCloud()
         cld = cld.astype(np.float32)
-        cloud.from_array(cld)
-        ne = cloud.make_NormalEstimation()
-        kdtree = cloud.make_kdtree()
-        ne.set_SearchMethod(kdtree)
-        ne.set_KSearch(50)
-        n = ne.compute()
-        n = n.to_array()
+        cloud.points = o3d.utility.Vector3dVector(cld)
+        cloud.estimate_normals()
+        cloud.orient_normals_towards_camera_location()
+        n = np.array(cloud.normals).copy()
         return n
 
     def get_normal_map(self, nrm, choose):
