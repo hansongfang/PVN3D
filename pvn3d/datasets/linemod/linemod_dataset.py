@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import cv2
-import pcl
 import torch
 import os.path
 import numpy as np
@@ -162,15 +161,13 @@ class LM_Dataset():
         return np.clip(img, 0, 255).astype(np.uint8)
 
     def get_normal(self, cld):
-        cloud = pcl.PointCloud()
+        import open3d as o3d
+        cloud = o3d.geometry.PointCloud()
         cld = cld.astype(np.float32)
-        cloud.from_array(cld)
-        ne = cloud.make_NormalEstimation()
-        kdtree = cloud.make_kdtree()
-        ne.set_SearchMethod(kdtree)
-        ne.set_KSearch(50)
-        n = ne.compute()
-        n = n.to_array()
+        cloud.points = o3d.utility.Vector3dVector(cld)
+        cloud.estimate_normals()
+        cloud.orient_normals_towards_camera_location()
+        n = np.array(cloud.normals).copy()
         return n
 
     def add_real_back(self, rgb, labels, dpt, dpt_msk):
