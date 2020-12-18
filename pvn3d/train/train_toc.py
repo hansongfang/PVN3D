@@ -5,6 +5,7 @@ from __future__ import (
     print_function,
     unicode_literals,
 )
+from pathlib import Path
 import torch
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_sched
@@ -381,7 +382,8 @@ class Trainer(object):
                             loss_ctr_of = res['loss_ctr_of']
                             loss_target = res['loss_target']
                             logger.info(
-                                f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}')
+                                f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f} '
+                                f'loss_kp_of: {float(loss_kp_of):.3f}, loss_ctr_of: {float(loss_ctr_of):.3f}, loss_target: {float(loss_target):.3f}')
                             # logger.info(f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}, '
                             #             f'loss_kp_of: {float(loss_kp_of):.3f}, loss_ctr_of: {float(loss_ctr_of):3.f}')
 
@@ -398,6 +400,8 @@ class Trainer(object):
                             self.viz.update("train", it, res)
 
                         eval_flag, eval_frequency = is_to_eval(epoch, it)
+                        if it % 1000 == 0:
+                            eval_flag = True
                         if eval_flag:
                             pbar.close()
 
@@ -443,7 +447,9 @@ if __name__ == "__main__":
     batch_size = 1
     num_objects=num_class = 12
     n_sample_points = 8192
-    log_model_dir = './outputs/toc/'
+    log_model_dir = './train_log/toc/checkpoints/'
+    Path(log_model_dir).mkdir(exist_ok=True, parents=True)
+
     step_size_up = 16666  # number used in train_linemod
     step_size_down = 16666  # number used in train linemod
     mini_batch_size = 1  # for bnm_lmdb
@@ -472,7 +478,7 @@ if __name__ == "__main__":
         )
         val_ds = TOCDataset('val',
                             root_dir=root_dir,
-                            voxel_size=voxel_size,
+                            voxel_size=None,
                             shuffle_points=shuffle_points,
                             num_objects=num_objects,
                             remove_table=remove_table)
@@ -565,9 +571,9 @@ if __name__ == "__main__":
         model_fn,
         optimizer,
         checkpoint_name=os.path.join(
-            checkpoint_fd, "{}_pvn3d".format(args.cls)),
+            checkpoint_fd, "level1_pvn3d"),
         best_name=os.path.join(
-            checkpoint_fd, "{}_pvn3d_best".format(args.cls)),
+            checkpoint_fd, "level1_pvn3d_best"),
         lr_scheduler=lr_scheduler,
         bnm_scheduler=bnm_scheduler,
         viz=viz,
