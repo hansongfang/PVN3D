@@ -384,8 +384,11 @@ class Trainer(object):
                         loss_kp_of = res['loss_kp_of']
                         loss_ctr_of = res['loss_ctr_of']
                         loss_target = res['loss_target']
+                        # logger.info(
+                        #     f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}')
                         logger.info(
-                            f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}')
+                            f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f} '
+                            f'loss_kp_of: {float(loss_kp_of):.3f}, loss_ctr_of: {float(loss_ctr_of):.3f}, loss_target: {float(loss_target):.3f}')
                         # logger.info(f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}, '
                         #             f'loss_kp_of: {float(loss_kp_of):.3f}, loss_ctr_of: {float(loss_ctr_of):3.f}')
 
@@ -524,7 +527,7 @@ if __name__ == "__main__":
     viz.text(pprint.pformat(vars(args)))
 
     checkpoint_fd = config.log_model_dir
-
+    logger.info(f'')
     trainer = Trainer(
         model,
         model_fn,
