@@ -350,7 +350,6 @@ class Trainer(object):
         _, eval_frequency = is_to_eval(0, it)
         logger.info(f'start_it: {start_it}')
         logger.info(f'start_epoch: {start_epoch}, eval_frequency: {eval_frequency}')
-
         with tqdm.trange(start_epoch, n_epochs + 1, desc="epochs") as tbar, tqdm.tqdm(
             total=eval_frequency, leave=False, desc="train"
         ) as pbar:
@@ -361,78 +360,79 @@ class Trainer(object):
                 np.random.seed()
                 if log_epoch_f is not None:
                     os.system("echo {} > {}".format(epoch, log_epoch_f))
-                for ibs, batch in enumerate(train_loader):
-                    self.model.train()
+                for x in range(10):
+                    for ibs, batch in enumerate(train_loader):
+                        self.model.train()
 
-                    if self.lr_scheduler is not None:
-                        self.lr_scheduler.step(it)
+                        if self.lr_scheduler is not None:
+                            self.lr_scheduler.step(it)
 
-                    if self.bnm_scheduler is not None:
-                        self.bnm_scheduler.step(it)
+                        if self.bnm_scheduler is not None:
+                            self.bnm_scheduler.step(it)
 
-                    self.optimizer.zero_grad()
-                    _, loss, res = self.model_fn(self.model, batch)
+                        self.optimizer.zero_grad()
+                        _, loss, res = self.model_fn(self.model, batch)
 
-                    if it % 10 == 0:
-                        acc_rgbd = res['acc_rgbd']
-                        total_loss = res['loss']
-                        loss_rgbd_seg = res['loss_rgbd_seg']
-                        loss_kp_of = res['loss_kp_of']
-                        loss_ctr_of = res['loss_ctr_of']
-                        loss_target = res['loss_target']
-                        logger.info(
-                            f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}')
-                        # logger.info(f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}, '
-                        #             f'loss_kp_of: {float(loss_kp_of):.3f}, loss_ctr_of: {float(loss_ctr_of):3.f}')
+                        if it % 10 == 0:
+                            acc_rgbd = res['acc_rgbd']
+                            total_loss = res['loss']
+                            loss_rgbd_seg = res['loss_rgbd_seg']
+                            loss_kp_of = res['loss_kp_of']
+                            loss_ctr_of = res['loss_ctr_of']
+                            loss_target = res['loss_target']
+                            logger.info(
+                                f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}')
+                            # logger.info(f'Epoch[{epoch}], iter {it}, acc_rgbd: {float(acc_rgbd):.3f}, loss_rgbd_seg: {float(loss_rgbd_seg):.3f}, '
+                            #             f'loss_kp_of: {float(loss_kp_of):.3f}, loss_ctr_of: {float(loss_ctr_of):3.f}')
 
-                    loss.backward()
-                    self.optimizer.step()
+                        loss.backward()
+                        self.optimizer.step()
 
-                    it += 1
+                        it += 1
 
-                    pbar.update()
-                    pbar.set_postfix(dict(total_it=it))
-                    tbar.refresh()
-
-                    if self.viz is not None:
-                        self.viz.update("train", it, res)
-
-                    eval_flag, eval_frequency = is_to_eval(epoch, it)
-                    if eval_flag:
-                        pbar.close()
-
-                        if test_loader is not None:
-                            val_loss, res = self.eval_epoch(test_loader)
-
-                            if self.viz is not None:
-                                self.viz.update("val", it, res)
-
-                            is_best = val_loss < best_loss
-                            best_loss = min(best_loss, val_loss)
-                            save_checkpoint(
-                                checkpoint_state(
-                                    self.model, self.optimizer, val_loss, epoch, it
-                                ),
-                                is_best,
-                                filename=self.checkpoint_name,
-                                bestname=self.best_name + '_%.4f' % val_loss,
-                                bestname_pure=self.best_name,
-                            )
-                            info_p = self.checkpoint_name.replace(
-                                '.pth.tar', '_epoch.txt'
-                            )
-                            os.system(
-                                'echo {} {} >> {}'.format(
-                                    it, val_loss, info_p
-                                )
-                            )
-
-                        pbar = tqdm.tqdm(
-                            total=eval_frequency, leave=False, desc="train"
-                        )
+                        pbar.update()
                         pbar.set_postfix(dict(total_it=it))
+                        tbar.refresh()
 
-                    self.viz.flush()
+                        if self.viz is not None:
+                            self.viz.update("train", it, res)
+
+                        eval_flag, eval_frequency = is_to_eval(epoch, it)
+                        if eval_flag:
+                            pbar.close()
+
+                            if test_loader is not None:
+                                val_loss, res = self.eval_epoch(test_loader)
+
+                                if self.viz is not None:
+                                    self.viz.update("val", it, res)
+
+                                is_best = val_loss < best_loss
+                                best_loss = min(best_loss, val_loss)
+                                save_checkpoint(
+                                    checkpoint_state(
+                                        self.model, self.optimizer, val_loss, epoch, it
+                                    ),
+                                    is_best,
+                                    filename=self.checkpoint_name,
+                                    bestname=self.best_name + '_%.4f' % val_loss,
+                                    bestname_pure=self.best_name,
+                                )
+                                info_p = self.checkpoint_name.replace(
+                                    '.pth.tar', '_epoch.txt'
+                                )
+                                os.system(
+                                    'echo {} {} >> {}'.format(
+                                        it, val_loss, info_p
+                                    )
+                                )
+
+                            pbar = tqdm.tqdm(
+                                total=eval_frequency, leave=False, desc="train"
+                            )
+                            pbar.set_postfix(dict(total_it=it))
+
+                        self.viz.flush()
 
         return best_loss
 
@@ -441,15 +441,28 @@ if __name__ == "__main__":
     # parameters
     n_total_epoch = 10
     batch_size = 1
-    num_class = 12
-    n_sample_points = 10
+    num_objects=num_class = 12
+    n_sample_points = 8192
     log_model_dir = './outputs/toc/'
     step_size_up = 16666  # number used in train_linemod
     step_size_down = 16666  # number used in train linemod
     mini_batch_size = 1  # for bnm_lmdb
+
+    # dataset parameter
+    root_dir = '/media/shanaf/HDD2/Songfang/DATA/PVN3D/v2_scene1'
+    voxel_size = 0.001,
+    shuffle_points = True,
+    remove_table = True
+
     print("cls_type: ", args.cls)
     if not args.eval_net:
-        train_ds = TOCDataset('train', cls_type=args.cls)
+        train_ds = TOCDataset('train',
+                              root_dir=root_dir,
+                              voxel_size=None,
+                              shuffle_points=shuffle_points,
+                              num_objects=num_objects,
+                              to_tensor=True,
+                              remove_table=remove_table)
         train_loader = torch.utils.data.DataLoader(
             train_ds,
             batch_size=batch_size,
@@ -457,7 +470,12 @@ if __name__ == "__main__":
             num_workers=4,
             worker_init_fn=worker_init_fn
         )
-        val_ds = TOCDataset('val', cls_type=args.cls)
+        val_ds = TOCDataset('val',
+                            root_dir=root_dir,
+                            voxel_size=voxel_size,
+                            shuffle_points=shuffle_points,
+                            num_objects=num_objects,
+                            remove_table=remove_table)
         val_loader = torch.utils.data.DataLoader(
             val_ds,
             batch_size=batch_size,
