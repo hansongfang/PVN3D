@@ -8,6 +8,8 @@ from torch.utils.data import Dataset
 import os
 import pickle
 import gzip
+
+
 # from common.utils.io_utils import load_pickle
 # from pvn3d.utils.pc_utils import pad_or_clip_v2
 # from pvn3d.utils.img_utils import normalize_image
@@ -93,8 +95,15 @@ class TOCDataset(Dataset):
     _int64_fields = ('labels', 'fg_labels', 'choose_pixel')
     _bool_fields = ('points_mask',)
 
-    def __init__(self, dataset_name, root_dir, voxel_size=None, shuffle_points=False, num_points=8192,
-                 num_keypoints=8, num_objects=7, to_tensor=True, remove_table=False):
+    def __init__(self, dataset_name,
+                 root_dir,
+                 voxel_size=None,
+                 shuffle_points=False,
+                 num_points=8192,
+                 num_keypoints=8,
+                 num_objects=7,
+                 to_tensor=True,
+                 remove_table=False):
         # TODO: add data augmentation
         self.dataset_name = dataset_name
         self.root_dir = Path(root_dir)
@@ -117,7 +126,6 @@ class TOCDataset(Dataset):
             logger.error(f'Not exists list file: {self.list_file}')
         assert self.list_file.exists(), f'{self.list_file} not exists.'
         self.data_list = self._gen_data_list()
-        self.data_list = self.data_list[:10]
         logger.info(f'TOC Dataset: name: {dataset_name}, '
                     f'length: {len(self.data_list)}, '
                     f'remove_table: {self.remove_table}')
@@ -151,8 +159,8 @@ class TOCDataset(Dataset):
 
         # Load images
         color_image = cv2.imread(str(path_list['color']), cv2.IMREAD_COLOR)
-        color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
-        color_image = normalize_image(color_image)
+        # color_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
+        # color_image = normalize_image(color_image)
         depth_image = cv2.imread(str(path_list['depth']), cv2.IMREAD_UNCHANGED)
         label_image = cv2.imread(str(path_list['seg_label']), cv2.IMREAD_UNCHANGED)
 
@@ -211,7 +219,7 @@ class TOCDataset(Dataset):
         keypoints_arr = np.zeros((self.num_objects, self.num_keypoints, 3))
         center_targ_offset = np.zeros((self.num_points, 3))
         keypoints_targ_offset = np.zeros((self.num_points, self.num_keypoints, 3))
-        for object_id in range(1, self.num_objects+1):
+        for object_id in range(1, self.num_objects + 1):
             if object_id not in meta_info['id2name'].keys():
                 continue
             object_name = meta_info['id2name'][object_id]
@@ -261,8 +269,25 @@ class TOCDataset(Dataset):
 
         if self.to_tensor:
             out_dict = self.convert_to_tensor(out_dict)
-
-        return out_dict
+        cld_rgb_nrm = torch.cat([out_dict['points'],
+                                 out_dict['feature'],
+                                 out_dict['normals']], dim=1)
+        choose_pixel = out_dict['choose_pixel'].unsqueeze(0)
+        class_ids = torch.tensor(np.arange(self.num_objects)).view(self.num_objects, 1).contiguous()
+        out_dict['cld_rgb_nrm'] = cld_rgb_nrm
+        out_dict['class_ids'] = class_ids
+        # return out_dict
+        return out_dict['color_image'], \
+               out_dict['points'], \
+               out_dict['cld_rgb_nrm'], \
+               out_dict['choose_pixel'].unsqueeze(0), \
+               out_dict['keypoints_targ_offset'], \
+               out_dict['center_targ_offset'], \
+               out_dict['class_ids'], \
+               out_dict['RT_arr'], \
+               out_dict['labels'], \
+               out_dict['keypoints_arr'], \
+               out_dict['center_arr'],
 
     def __len__(self):
         return len(self.data_list)
@@ -376,14 +401,15 @@ def main():
             np.concatenate([choose_points, center_offset], axis=0))
         line_idx = []
         for i in range(num_points):
-            line_idx.append([i, i+num_points])
+            line_idx.append([i, i + num_points])
         line_idx = np.stack(line_idx).astype(np.int)
         center_offset_linset.lines = open3d.utility.Vector2iVector(line_idx)
         colors = np.zeros((num_points, 3))
         colors[:, 2] = 1.0
         center_offset_linset.colors = open3d.utility.Vector3dVector(colors)
 
-        open3d.visualization.draw_geometries([pcd, kpcd, center, center_offset_linset], window_name=f'{data_idx}-{obj_idx}')
+        open3d.visualization.draw_geometries([pcd, kpcd, center, center_offset_linset],
+                                             window_name=f'{data_idx}-{obj_idx}')
 
     cv2.imshow(f'{data_idx}-pts', color_image)
     cv2.waitKey(0)
