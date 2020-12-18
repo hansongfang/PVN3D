@@ -277,17 +277,32 @@ class TOCDataset(Dataset):
         out_dict['cld_rgb_nrm'] = cld_rgb_nrm
         out_dict['class_ids'] = class_ids
         # return out_dict
-        return out_dict['color_image'], \
-               out_dict['points'], \
-               out_dict['cld_rgb_nrm'], \
-               out_dict['choose_pixel'].unsqueeze(0), \
-               out_dict['keypoints_targ_offset'], \
-               out_dict['center_targ_offset'], \
-               out_dict['class_ids'], \
-               out_dict['RT_arr'], \
-               out_dict['labels'], \
-               out_dict['keypoints_arr'], \
-               out_dict['center_arr'],
+        if self.dataset_name == 'test':
+            return out_dict['color_image'], \
+                   out_dict['points'], \
+                   out_dict['cld_rgb_nrm'], \
+                   out_dict['choose_pixel'].unsqueeze(0), \
+                   out_dict['keypoints_targ_offset'], \
+                   out_dict['center_targ_offset'], \
+                   out_dict['class_ids'], \
+                   out_dict['RT_arr'], \
+                   out_dict['labels'], \
+                   out_dict['keypoints_arr'], \
+                   out_dict['center_arr'], \
+                   out_dict['scene_id']
+        else:
+            return out_dict['color_image'], \
+                   out_dict['points'], \
+                   out_dict['cld_rgb_nrm'], \
+                   out_dict['choose_pixel'].unsqueeze(0), \
+                   out_dict['keypoints_targ_offset'], \
+                   out_dict['center_targ_offset'], \
+                   out_dict['class_ids'], \
+                   out_dict['RT_arr'], \
+                   out_dict['labels'], \
+                   out_dict['keypoints_arr'], \
+                   out_dict['center_arr'], \
+                   out_dict['scene_id']
 
     def __len__(self):
         return len(self.data_list)
